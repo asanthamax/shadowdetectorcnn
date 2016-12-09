@@ -2,6 +2,7 @@ import keras
 import numpy
 import xml.etree.ElementTree as ET
 import theano.tensor as T
+import os
 from PIL import Image
 from scipy import misc
 
@@ -114,7 +115,7 @@ class image():
             self.boxes[row][col].has_obj = True
             self.boxes[row][col].objs.append(objif)
 
-def prepareBatch(start,end,imageNameFile,vocPath):
+def prepareBatch(start,end,vocPath,rootpath):
     """
     Args:
       start: the number of image to start
@@ -126,22 +127,23 @@ def prepareBatch(start,end,imageNameFile,vocPath):
     Returns:
       A list of end-start+1 image objects
     """
+    directories = filter(os.path.isdir, os.listdir(vocPath))
     imageList = []
-    labels = ["aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow", "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train","tvmonitor"]
-    file = open(imageNameFile)
-    imageNames = file.readlines()
-    for i in range(start,end):
-        imgName = imageNames[i].strip('\n')
-        imgPath = vocPath+'/JPEGImages/'+imgName+'.jpg'
-        xmlPath = vocPath+'/Annotations/'+imgName+'.xml'
-        img = image(side=7, imgPath=imgPath)
-        img.parseXML(xmlPath, labels, 7)
-        imageList.append(img)
+    labels = os.listdir(vocPath)
+    for directory in directories:
+        for fn in next(os.walk(directory))[2]:
+            path = os.path.join(directory, fn)
+           # labels = ["aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow", "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train","tvmonitor"]
+            imgname = os.path.splitext(os.path.basename(path))
+            xmlPath = rootpath+'/Annotations/'+imgname+'.xml'
+            img = image(side=7, imgPath=path)
+            img.parseXML(xmlPath, labels, 7)
+            imageList.append(img)
 
     return imageList
 
 
-def generate_batch_data(vocPath,imageNameFile,batch_size,sample_number):
+def generate_batch_data(vocPath,batch_size,sample_number,rootpath):
     """
     Args:
       vocPath: the path of pascal voc data
@@ -151,8 +153,9 @@ def generate_batch_data(vocPath,imageNameFile,batch_size,sample_number):
       A data generator generates training batch indefinitely
     """
     class_num = 20
-    #Read all the data once and dispatch them out as batches to save time
-    TotalimageList = prepareBatch(0,sample_number,imageNameFile,vocPath)
+    #Read all the data once and dispatch them out as batches to save time2
+
+    TotalimageList = prepareBatch(0,sample_number,vocPath,rootpath)
 
     while 1:
         batches = sample_number // batch_size

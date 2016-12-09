@@ -1,3 +1,5 @@
+import os
+
 import keras
 import numpy
 import cv2
@@ -73,34 +75,34 @@ adam = Adam(lr=1e-4, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 model.compile(loss=custom_loss, optimizer=sgd, metrics=['accuracy'])
 print(model.summary())
 
-#history = LossHistory()
-#testAcc = TestAcc()
+history = LossHistory()
+testAcc = TestAcc()
 
-#history = model.fit_generator(
-#    generate_batch_data('data/VOC2012', 'data/VOC2012/ImageSets/Segmentation/trainval.txt', 16, sample_number=2913),
-#    samples_per_epoch=5826,
-#    nb_epoch=40,
-#    callbacks=[history, testAcc]
-#)
+history = model.fit_generator(
+    generate_batch_data('data/indoornavigation/Images', 16, sample_number=2913, rootpath='data/indoornavigation'),
+    samples_per_epoch=5826,
+    nb_epoch=40,
+    callbacks=[history, testAcc]
+)
 
 file = open(filepath+"/recognizer.h5", 'a')
 #model.save_weights(filepath=filepath+"/recognizer.h5")
 model.load_weights(filepath=filepath+"/recognizer.h5")
-img = Image.open("data/VOC2012/JPEGImages/2007_000733.jpg")
+img = Image.open("data/indoornavigation/Images/corridor/003.jpg")
 img = img.resize((150, 150), PIL.Image.ANTIALIAS)
-img.save("data/VOC2012/JPEGImages/2007_000733.jpg")
+img.save("data/indoornavigation/Images/corridor/003.jpg")
 # i = cv2.imread("data/train/shadows/test/nonshadows/04822305_257_1025_513_1281.jpg")
 # cv2.putText(i, "Shadow Detected", (70, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 # cv2.imshow("Object", i)
 # cv2.waitKey(100000)
-testImage = load_img("data/VOC2012/JPEGImages/2007_000733.jpg")
+testImage = load_img("data/indoornavigation/Images/corridor/003.jpg")
 x = img_to_array(testImage)
 x = x.reshape((1,)+x.shape)
-labels = ["aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow", "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train","tvmonitor"]
-img = Image.open("data/VOC2012/JPEGImages/2007_000733.jpg")
+labels = os.listdir('data/indoornavigation/Images')
+img = Image.open("data/indoornavigation/Images/2007_000733.jpg")
 img = img.resize((150, 150), PIL.Image.ANTIALIAS)
-img.save("data/VOC2012/JPEGImages/2007_000733.jpg")
-drawImage = Image.open("data/VOC2012/JPEGImages/2007_000733.jpg")
+img.save("data/indoornavigation/Images/corridor/003.jpg")
+drawImage = Image.open("data/indoornavigation/Images/corridor/003.jpg")
 drawer = ImageDraw.Draw(drawImage)
 prediction = model.predict(x)
 prediction = prediction[0]
@@ -145,8 +147,8 @@ for i in range(49):
         final_output.append(down)
         final_output.append(numpy.argmax(prediction[2:24]))
         drawer.text((xcoordinate, ycoordinate), labels[numpy.argmax(prediction[2:24])])
-drawImage.save("data/VOC2012/JPEGImages/prediction1.jpg")
-i = cv2.imread("data/VOC2012/JPEGImages/prediction1.jpg")
+drawImage.save("data/indoornavigation/Images/corridor/003.jpg")
+i = cv2.imread("data/indoornavigation/Images/corridor/003.jpg")
 cv2.imshow("Object", i)
 cv2.waitKey(100000)
 print(model.predict(x))
